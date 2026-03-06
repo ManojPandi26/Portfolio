@@ -1,0 +1,73 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+    content: [
+        "./index.html",
+        "./src/**/*.{js,ts,jsx,tsx}",
+    ],
+    theme: {
+        extend: {
+            colors: {
+                'bg-base': 'var(--color-bg-base)',
+                'bg-elevated': 'var(--color-bg-elevated)',
+                'bg-overlay': 'var(--color-bg-overlay)',
+                'primary': 'var(--color-primary)',
+                'primary-glow': 'var(--color-primary-glow)',
+                'primary-hover': 'var(--color-primary-hover)',
+                'accent': 'var(--color-accent)',
+                'accent-glow': 'var(--color-accent-glow)',
+                'text-high': 'var(--color-text-high)',
+                'text-mid': 'var(--color-text-mid)',
+                'text-low': 'var(--color-text-low)',
+                'border-color': 'var(--color-border)',
+                'border-bright': 'var(--color-border-bright)',
+                'success': 'var(--color-success)',
+                'warn': 'var(--color-warn)',
+                'error': 'var(--color-error)',
+            },
+            fontFamily: {
+                'display': 'var(--font-display)',
+                'body': 'var(--font-body)',
+                'mono': 'var(--font-mono)',
+            },
+            fontSize: {
+                'xs': 'var(--text-xs)',
+                'sm': 'var(--text-sm)',
+                'base': 'var(--text-base)',
+                'lg': 'var(--text-lg)',
+                'xl': 'var(--text-xl)',
+                '2xl': 'var(--text-2xl)',
+                '3xl': 'var(--text-3xl)',
+                'hero': 'var(--text-hero)',
+            },
+            spacing: {
+                '1': 'var(--space-1)',
+                '2': 'var(--space-2)',
+                '3': 'var(--space-3)',
+                '4': 'var(--space-4)',
+                '5': 'var(--space-5)',
+                '6': 'var(--space-6)',
+                '7': 'var(--space-7)',
+                '8': 'var(--space-8)',
+                '9': 'var(--space-9)',
+                '10': 'var(--space-10)',
+                '11': 'var(--space-11)',
+            },
+            borderRadius: {
+                'sm': 'var(--radius-sm)',
+                'md': 'var(--radius-md)',
+                'lg': 'var(--radius-lg)',
+                'full': 'var(--radius-full)',
+            },
+            boxShadow: {
+                'glow-primary': 'var(--shadow-glow-primary)',
+                'glow-accent': 'var(--shadow-glow-accent)',
+                'card': 'var(--shadow-card)',
+                'elevated': 'var(--shadow-elevated)',
+            },
+            transitionTimingFunction: {
+                'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            },
+        },
+    },
+    plugins: [],
+}
