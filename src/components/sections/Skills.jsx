@@ -1,125 +1,124 @@
-import React, { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { staggerContainer, staggerItem, getVariant } from '../../utils/animationVariants.js';
-import { SKILL_GROUPS } from '../../utils/constants.js';
-import { useReducedMotion } from '../../hooks/useReducedMotion.js';
+import SectionHeader from '../ui/SectionHeader.jsx';
+import ScrollFloat from '../reactbits/ScrollFloat.jsx';
+import GradientText from '../reactbits/GradientText.jsx';
+import { SKILLS, SKILLS_ROW2 } from '../../data/skills.js';
 
-function SkillCard({ skill, delay, prefersReduced }) {
-    return (
-        <motion.div
-            variants={getVariant(staggerItem, prefersReduced)}
-            whileHover={prefersReduced ? {} : {
-                y: -4,
-                scale: 1.05,
-                boxShadow: 'var(--shadow-glow-primary)',
-                borderColor: 'var(--color-primary)',
-            }}
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 'var(--space-3)',
-                padding: 'var(--space-5) var(--space-4)',
-                background: 'var(--color-bg-elevated)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-md)',
-                cursor: 'default',
-                transition: 'box-shadow var(--transition-normal), border-color var(--transition-normal)',
-                minWidth: '88px',
-            }}
-        >
-            <span style={{ fontSize: '1.8rem', lineHeight: 1, userSelect: 'none' }}>{skill.icon}</span>
-            <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-xs)',
-                color: 'var(--color-text-mid)',
-                letterSpacing: 'var(--tracking-wide)',
-                textAlign: 'center',
-                whiteSpace: 'nowrap',
-            }}>
-                {skill.name}
-            </span>
-        </motion.div>
-    );
+/* ═══════════════════════════════════════════
+   Marquee Row — infinite CSS scroll.
+   Hover → SLOWS DOWN (5× slower), not faster.
+   Edge-fade mask for polish.
+   ═══════════════════════════════════════════ */
+function MarqueeRow({ items, direction = 'left', baseDuration = 40 }) {
+  const [hovered, setHovered] = useState(false);
+  const duration = hovered ? baseDuration * 5 : baseDuration;
+  const animName = direction === 'left' ? 'marquee-left' : 'marquee-right';
+  const allItems = [...items, ...items, ...items];
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        overflow: 'hidden',
+        padding: 'var(--space-3) 0',
+        maskImage: 'linear-gradient(90deg, transparent, black 4%, black 96%, transparent)',
+        WebkitMaskImage: 'linear-gradient(90deg, transparent, black 4%, black 96%, transparent)',
+      }}
+    >
+      <div style={{
+        display: 'flex',
+        gap: 'var(--space-4)',
+        whiteSpace: 'nowrap',
+        animationName: animName,
+        animationDuration: `${duration}s`,
+        animationTimingFunction: 'linear',
+        animationIterationCount: 'infinite',
+        willChange: 'transform',
+      }}>
+        {allItems.map((skill, i) => (
+          <SkillPill key={`${skill.name}-${i}`} skill={skill} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
+/* ═══════════════════════════════════════════
+   Skill Pill — devicon + label with hover glow.
+   ═══════════════════════════════════════════ */
+function SkillPill({ skill }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.08, y: -3 }}
+      transition={{ type: 'spring', stiffness: 280, damping: 18 }}
+      className="glass"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 'var(--space-3)',
+        padding: '10px 22px',
+        borderRadius: 'var(--radius-full)',
+        flexShrink: 0,
+        border: `1px solid ${skill.color}15`,
+        cursor: 'default',
+        transition: 'border-color var(--transition-normal), box-shadow var(--transition-normal)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = `${skill.color}50`;
+        e.currentTarget.style.boxShadow = `0 0 28px ${skill.color}18`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = `${skill.color}15`;
+        e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+      }}
+    >
+      <img
+        src={`https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/${skill.icon}/${skill.icon}-original.svg`}
+        alt=""
+        width={22}
+        height={22}
+        loading="lazy"
+        style={{ filter: 'brightness(0.9)', flexShrink: 0 }}
+        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      />
+      <span style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 'var(--text-sm)',
+        color: 'var(--color-text-mid)',
+        letterSpacing: 'var(--tracking-wide)',
+      }}>
+        {skill.name}
+      </span>
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   SKILLS SECTION — clean dual marquee only.
+   Featured grid removed per user request.
+   ═══════════════════════════════════════════ */
 export default function Skills() {
-    const prefersReduced = useReducedMotion();
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: true, margin: '-80px' });
+  return (
+    <section
+      id="skills"
+      style={{
+        padding: 'var(--section-py) 0',
+        background: 'var(--color-bg-elevated)',
+        overflow: 'hidden',
+      }}
+    >
+      <div style={{ padding: '0 var(--section-px)' }}>
+        <SectionHeader eyebrow="Capabilities" heading="Tech Stack" />
+      </div>
 
-    return (
-        <section
-            id="skills"
-            style={{
-                padding: 'var(--section-py) var(--section-px)',
-                background: 'var(--color-bg-elevated)',
-            }}
-        >
-            <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.6 }}
-                    ref={ref}
-                    style={{ textAlign: 'center', marginBottom: 'var(--space-9)' }}
-                >
-                    <p className="eyebrow" style={{ marginBottom: 'var(--space-3)' }}>Tech Stack</p>
-                    <h2 style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 'var(--text-3xl)',
-                        fontWeight: 'var(--weight-black)',
-                        letterSpacing: 'var(--tracking-tight)',
-                        color: 'var(--color-text-high)',
-                    }}>
-                        Tools I Work With
-                    </h2>
-                </motion.div>
-
-                {/* Skill groups */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-                    {SKILL_GROUPS.map((group, gi) => (
-                        <div key={group.label}>
-                            <motion.p
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={inView ? { opacity: 1, x: 0 } : {}}
-                                transition={{ duration: 0.5, delay: gi * 0.1 }}
-                                style={{
-                                    fontFamily: 'var(--font-mono)',
-                                    fontSize: 'var(--text-xs)',
-                                    color: 'var(--color-text-low)',
-                                    letterSpacing: 'var(--tracking-widest)',
-                                    textTransform: 'uppercase',
-                                    marginBottom: 'var(--space-4)',
-                                    borderLeft: '2px solid var(--color-primary)',
-                                    paddingLeft: 'var(--space-3)',
-                                }}
-                            >
-                                {group.label}
-                            </motion.p>
-                            <motion.div
-                                variants={getVariant(staggerContainer(0.07, gi * 0.1), prefersReduced)}
-                                initial="hidden"
-                                animate={inView ? 'visible' : 'hidden'}
-                                style={{
-                                    display: 'flex',
-                                    flexWrap: 'wrap',
-                                    gap: 'var(--space-4)',
-                                }}
-                            >
-                                {group.skills.map((skill) => (
-                                    <SkillCard
-                                        key={skill.name}
-                                        skill={skill}
-                                        prefersReduced={prefersReduced}
-                                    />
-                                ))}
-                            </motion.div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
+      {/* Dual marquee rows — opposite directions, hover slows */}
+      <div>
+        <MarqueeRow items={SKILLS}      direction="left"  baseDuration={45} />
+        <div style={{ height: 'var(--space-3)' }} />
+        <MarqueeRow items={SKILLS_ROW2} direction="right" baseDuration={38} />
+      </div>
+    </section>
+  );
 }

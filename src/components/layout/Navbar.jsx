@@ -1,299 +1,203 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useScrollProgress } from '../../hooks/useScrollProgress.js';
-import { NAV_LINKS } from '../../utils/constants.js';
-import { drawerSlideIn } from '../../utils/animationVariants.js';
-import { X, Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import MagneticButton from '../ui/MagneticButton.jsx';
 
-function useIsMobile() {
-    const [isMobile, setIsMobile] = useState(() =>
-        typeof window !== 'undefined' ? window.innerWidth < 768 : false
-    );
-    useEffect(() => {
-        const mq = window.matchMedia('(max-width: 767px)');
-        const handler = (e) => setIsMobile(e.matches);
-        mq.addEventListener('change', handler);
-        return () => mq.removeEventListener('change', handler);
-    }, []);
-    return isMobile;
-}
+const NAV_LINKS = [
+  { label: 'Home', href: '#hero' },
+  { label: 'About', href: '#about' },
+  { label: 'Skills', href: '#skills' },
+  { label: 'Projects', href: '#projects' },
+  { label: 'Contact', href: '#contact' },
+];
 
 export default function Navbar() {
-    const { isScrolled } = useScrollProgress();
-    const [menuOpen, setMenuOpen] = useState(false);
-    const isMobile = useIsMobile();
+  const [scrolled, setScrolled] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
 
-    // Close drawer on resize to desktop
-    useEffect(() => {
-        if (!isMobile) setMenuOpen(false);
-    }, [isMobile]);
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 80);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-    // Lock body scroll while drawer is open
-    useEffect(() => {
-        document.body.style.overflow = menuOpen ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
-    }, [menuOpen]);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e) => { setIsMobile(e.matches); if (!e.matches) setDrawerOpen(false); };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
-    const handleNav = (href) => {
-        setMenuOpen(false);
-        setTimeout(() => {
-            const el = document.querySelector(href);
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    };
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [drawerOpen]);
 
-    return (
-        <>
-            <motion.nav
-                initial={{ y: -80, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 1000,
-                    padding: '0 clamp(16px, 4vw, 48px)',
-                    height: '70px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'background var(--transition-normal), border-color var(--transition-normal)',
-                    background: isScrolled ? 'rgba(8, 12, 20, 0.88)' : 'transparent',
-                    backdropFilter: isScrolled ? 'blur(16px)' : 'none',
-                    WebkitBackdropFilter: isScrolled ? 'blur(16px)' : 'none',
-                    borderBottom: isScrolled ? '1px solid var(--color-border)' : '1px solid transparent',
-                }}
-            >
-                {/* Logo */}
+  const scrollTo = (href) => {
+    setDrawerOpen(false);
+    const el = document.querySelector(href);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <>
+      <motion.nav
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          padding: 'var(--space-4) var(--space-6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          transition: 'background var(--transition-normal), backdrop-filter var(--transition-normal), border-color var(--transition-normal)',
+          background: scrolled ? 'rgba(7, 9, 15, 0.75)' : 'transparent',
+          backdropFilter: scrolled ? 'var(--blur-glass)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'var(--blur-glass)' : 'none',
+          borderBottom: scrolled ? '1px solid var(--color-border)' : '1px solid transparent',
+        }}
+      >
+        {/* Logo */}
+        <a
+          href="#hero"
+          onClick={(e) => { e.preventDefault(); scrollTo('#hero'); }}
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-xl)',
+            fontWeight: 'var(--weight-black)',
+            color: 'var(--color-primary)',
+            textDecoration: 'none',
+            letterSpacing: 'var(--tracking-tight)',
+          }}
+        >
+          M.
+        </a>
+
+        {/* Desktop nav */}
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-7)' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-6)' }}>
+              {NAV_LINKS.map((link) => (
                 <a
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 'var(--text-lg)',
-                        fontWeight: 'var(--weight-black)',
-                        color: 'var(--color-text-high)',
-                        letterSpacing: 'var(--tracking-tight)',
-                        textDecoration: 'none',
-                        flexShrink: 0,
-                    }}
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => { e.preventDefault(); scrollTo(link.href); }}
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'var(--text-sm)',
+                    color: 'var(--color-text-mid)',
+                    textDecoration: 'none',
+                    transition: 'color var(--transition-fast)',
+                    position: 'relative',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-text-high)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-mid)'; }}
                 >
-                    MANOJ<span style={{ color: 'var(--color-primary)' }}>.</span>
+                  {link.label}
                 </a>
+              ))}
+            </div>
+            <MagneticButton strength={0.2}>
+              <a
+                href="#contact"
+                onClick={(e) => { e.preventDefault(); scrollTo('#contact'); }}
+                className="glass"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '8px 20px',
+                  borderRadius: 'var(--radius-full)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'var(--text-xs)',
+                  color: 'var(--color-primary)',
+                  textDecoration: 'none',
+                  border: '1px solid var(--color-primary-dim)',
+                  transition: 'box-shadow var(--transition-normal)',
+                  letterSpacing: 'var(--tracking-wide)',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-glow-primary)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-card)'; }}
+              >
+                Hire Me
+              </a>
+            </MagneticButton>
+          </div>
+        )}
 
-                {/* ── Desktop nav (≥ 768px) ── */}
-                {!isMobile && (
-                    <ul style={{ display: 'flex', gap: 'var(--space-6)', listStyle: 'none', margin: 0, padding: 0 }}>
-                        {NAV_LINKS.map((link) => (
-                            <li key={link.href}>
-                                <button
-                                    onClick={() => handleNav(link.href)}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        fontFamily: 'var(--font-body)',
-                                        fontSize: 'var(--text-sm)',
-                                        fontWeight: 'var(--weight-medium)',
-                                        color: 'var(--color-text-mid)',
-                                        letterSpacing: 'var(--tracking-wide)',
-                                        transition: 'color var(--transition-fast)',
-                                        padding: 'var(--space-2) 0',
-                                    }}
-                                    onMouseEnter={(e) => (e.target.style.color = 'var(--color-text-high)')}
-                                    onMouseLeave={(e) => (e.target.style.color = 'var(--color-text-mid)')}
-                                >
-                                    {link.label}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
+        {/* Mobile hamburger */}
+        {isMobile && (
+          <button
+            onClick={() => setDrawerOpen((p) => !p)}
+            aria-label="Toggle navigation"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-text-high)',
+              padding: 'var(--space-2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {drawerOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
+      </motion.nav>
 
-                {/* ── Desktop CTA (≥ 768px) ── */}
-                {!isMobile && (
-                    <a
-                        href="#contact"
-                        onClick={(e) => { e.preventDefault(); handleNav('#contact'); }}
-                        style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: 'var(--text-xs)',
-                            letterSpacing: 'var(--tracking-widest)',
-                            color: 'var(--color-accent)',
-                            border: '1px solid var(--color-accent)',
-                            padding: 'var(--space-2) var(--space-4)',
-                            borderRadius: 'var(--radius-sm)',
-                            textDecoration: 'none',
-                            textTransform: 'uppercase',
-                            transition: 'background var(--transition-fast), color var(--transition-fast)',
-                            whiteSpace: 'nowrap',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'var(--color-accent)';
-                            e.currentTarget.style.color = '#000';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.color = 'var(--color-accent)';
-                        }}
-                    >
-                        Hire Me
-                    </a>
-                )}
-
-                {/* ── Mobile hamburger (< 768px only) ── */}
-                {isMobile && (
-                    <button
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-                        aria-expanded={menuOpen}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--color-text-high)',
-                            padding: 'var(--space-2)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <AnimatePresence mode="wait" initial={false}>
-                            {menuOpen ? (
-                                <motion.span key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.18 }}>
-                                    <X size={24} />
-                                </motion.span>
-                            ) : (
-                                <motion.span key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.18 }}>
-                                    <Menu size={24} />
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
-                    </button>
-                )}
-            </motion.nav>
-
-            {/* ── Mobile Drawer ── */}
-            <AnimatePresence>
-                {menuOpen && (
-                    <motion.div
-                        variants={drawerSlideIn}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        style={{
-                            position: 'fixed',
-                            top: 0,
-                            right: 0,
-                            bottom: 0,
-                            width: 'min(300px, 80vw)',
-                            background: 'var(--color-bg-elevated)',
-                            borderLeft: '1px solid var(--color-border)',
-                            zIndex: 1001,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'flex-start',
-                            padding: 'var(--space-9) var(--space-7)',
-                            gap: 'var(--space-4)',
-                        }}
-                    >
-                        {/* Close button inside drawer */}
-                        <button
-                            onClick={() => setMenuOpen(false)}
-                            aria-label="Close menu"
-                            style={{
-                                position: 'absolute',
-                                top: 'var(--space-5)',
-                                right: 'var(--space-5)',
-                                background: 'none',
-                                border: 'none',
-                                cursor: 'pointer',
-                                color: 'var(--color-text-mid)',
-                            }}
-                        >
-                            <X size={20} />
-                        </button>
-
-                        {/* Logo in drawer */}
-                        <span style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 'var(--text-base)',
-                            fontWeight: 'var(--weight-black)',
-                            color: 'var(--color-text-high)',
-                            marginBottom: 'var(--space-4)',
-                        }}>
-                            MANOJ<span style={{ color: 'var(--color-primary)' }}>.</span>
-                        </span>
-
-                        {NAV_LINKS.map((link, i) => (
-                            <motion.button
-                                key={link.href}
-                                initial={{ opacity: 0, x: 24 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.06 + 0.05 }}
-                                onClick={() => handleNav(link.href)}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    fontFamily: 'var(--font-display)',
-                                    fontSize: 'var(--text-xl)',
-                                    fontWeight: 'var(--weight-bold)',
-                                    color: 'var(--color-text-high)',
-                                    letterSpacing: 'var(--tracking-tight)',
-                                    padding: 0,
-                                    textAlign: 'left',
-                                }}
-                            >
-                                {link.label}
-                            </motion.button>
-                        ))}
-
-                        {/* Mobile Hire Me CTA */}
-                        <motion.a
-                            href="mailto:manojpandi@example.com"
-                            initial={{ opacity: 0, x: 24 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: NAV_LINKS.length * 0.06 + 0.1 }}
-                            style={{
-                                marginTop: 'var(--space-4)',
-                                fontFamily: 'var(--font-mono)',
-                                fontSize: 'var(--text-xs)',
-                                letterSpacing: 'var(--tracking-widest)',
-                                color: 'var(--color-accent)',
-                                border: '1px solid var(--color-accent)',
-                                padding: 'var(--space-3) var(--space-5)',
-                                borderRadius: 'var(--radius-sm)',
-                                textDecoration: 'none',
-                                textTransform: 'uppercase',
-                            }}
-                        >
-                            Hire Me
-                        </motion.a>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Backdrop */}
-            <AnimatePresence>
-                {menuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setMenuOpen(false)}
-                        style={{
-                            position: 'fixed',
-                            inset: 0,
-                            background: 'rgba(0,0,0,0.65)',
-                            zIndex: 1000,
-                        }}
-                    />
-                )}
-            </AnimatePresence>
-        </>
-    );
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 99,
+              background: 'rgba(7, 9, 15, 0.92)',
+              backdropFilter: 'var(--blur-heavy)',
+              WebkitBackdropFilter: 'var(--blur-heavy)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'var(--space-7)',
+            }}
+          >
+            {NAV_LINKS.map((link, i) => (
+              <motion.a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => { e.preventDefault(); scrollTo(link.href); }}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.06 }}
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-2xl)',
+                  fontWeight: 'var(--weight-bold)',
+                  color: 'var(--color-text-high)',
+                  textDecoration: 'none',
+                  letterSpacing: 'var(--tracking-tight)',
+                }}
+              >
+                {link.label}
+              </motion.a>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }

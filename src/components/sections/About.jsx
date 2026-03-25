@@ -1,198 +1,219 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useInView } from 'framer-motion';
-import { useRef } from 'react';
-import { staggerContainer, staggerItem, springPop, slideInLeft, slideInRight, getVariant } from '../../utils/animationVariants.js';
-import { useReducedMotion } from '../../hooks/useReducedMotion.js';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion';
+import BlurText from '../reactbits/BlurText.jsx';
+import ScrollFloat from '../reactbits/ScrollFloat.jsx';
+import GradientText from '../reactbits/GradientText.jsx';
 
-function StatCard({ value, label, delay, prefersReduced }) {
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: true, margin: '-80px' });
+/* ═══════════════════════════════════════════
+   ABOUT SECTION — clean two-column split
+   Left: text content    Right: monogram + stats
+   No conic rotation. No unnecessary animation.
+   ═══════════════════════════════════════════ */
 
-    return (
-        <motion.div
-            ref={ref}
-            variants={getVariant(springPop, prefersReduced)}
-            initial="hidden"
-            animate={inView ? 'visible' : 'hidden'}
-            transition={{ delay }}
-            className="glass"
-            style={{
-                padding: 'var(--space-5) var(--space-6)',
-                borderRadius: 'var(--radius-lg)',
-                textAlign: 'center',
-                minWidth: '130px',
-                position: 'relative',
-                overflow: 'hidden',
-            }}
-            whileHover={{ scale: 1.05, boxShadow: 'var(--shadow-glow-primary)' }}
-        >
-            <div style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 'var(--text-2xl)',
-                fontWeight: 'var(--weight-black)',
-                letterSpacing: 'var(--tracking-tight)',
-                background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-            }}>
-                {value}
-            </div>
-            <div style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'var(--text-xs)',
-                color: 'var(--color-text-mid)',
-                letterSpacing: 'var(--tracking-wide)',
-                marginTop: 'var(--space-1)',
-                textTransform: 'uppercase',
-            }}>
-                {label}
-            </div>
-        </motion.div>
-    );
+const STATS = [
+  { label: 'Projects Shipped', end: 20, suffix: '+' },
+  { label: 'Technologies', end: 15, suffix: '+' },
+  { label: 'Contributions', end: 200, suffix: '+' },
+];
+
+function CountUp({ end, suffix = '', duration = 2 }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const count = useMotionValue(0);
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(count, end, {
+      duration,
+      ease: 'easeOut',
+      onUpdate: (v) => setDisplay(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [inView, end, duration]);
+
+  return (
+    <span ref={ref} style={{ fontVariantNumeric: 'tabular-nums' }}>
+      {display}{suffix}
+    </span>
+  );
+}
+
+function MarqueeStrip() {
+  const items = [
+    'JAVA', '·', 'SPRING BOOT', '·', 'MICROSERVICES', '·', 'REST API', '·',
+    'DOCKER', '·', 'KUBERNETES', '·', 'AWS', '·', 'REACT', '·',
+    'POSTGRESQL', '·', 'REDIS', '·', 'KAFKA', '·', 'CI/CD', '·',
+  ];
+  const allItems = [...items, ...items, ...items];
+
+  return (
+    <div style={{
+      overflow: 'hidden',
+      borderTop: '1px solid var(--color-border)',
+      borderBottom: '1px solid var(--color-border)',
+      padding: 'var(--space-3) 0',
+      marginTop: 'var(--space-6)',
+    }}>
+      <div style={{
+        display: 'flex', gap: 'var(--space-5)', whiteSpace: 'nowrap',
+        animation: 'marquee-left 30s linear infinite',
+      }}>
+        {allItems.map((item, i) => (
+          <span key={i} style={{
+            fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)',
+            color: item === '·' ? 'var(--color-primary-dim)' : 'var(--color-text-low)',
+            letterSpacing: 'var(--tracking-widest)', flexShrink: 0,
+          }}>{item}</span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function About() {
-    const prefersReduced = useReducedMotion();
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: true, margin: '-100px' });
+  return (
+    <section
+      id="about"
+      style={{
+        padding: 'var(--section-py) 0',
+        background: 'var(--color-bg-elevated)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* ── Two-column split ── */}
+      <div className="about-split" style={{
+        display: 'grid',
+        gridTemplateColumns: '1.1fr 0.9fr',
+        gap: 'var(--space-7)',
+        maxWidth: '960px',
+        margin: '0 auto',
+        padding: '0 var(--section-px)',
+        alignItems: 'start',
+      }}>
+        {/* LEFT — Text content */}
+        <ScrollFloat direction="left" offset={40}>
+          <div>
+            <p className="eyebrow" style={{ marginBottom: 'var(--space-3)' }}>ABOUT ME</p>
 
-    const lines = [
-        "I'm a Java Backend Engineer",
-        "who loves turning complex problems",
-        "into clean, scalable systems.",
-    ];
-
-    return (
-        <section
-            id="about"
-            style={{
-                padding: 'var(--section-py) var(--section-px)',
-                maxWidth: '1280px',
-                margin: '0 auto',
-            }}
-        >
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: 'var(--space-9)',
-                alignItems: 'center',
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-2xl)',
+              fontWeight: 'var(--weight-black)',
+              color: 'var(--color-text-high)',
+              letterSpacing: 'var(--tracking-tight)',
+              lineHeight: 'var(--leading-snug)',
+              marginBottom: 'var(--space-4)',
             }}>
-                {/* Left — text reveal */}
-                <motion.div
-                    ref={ref}
-                    variants={getVariant(staggerContainer(0.15, 0.2), prefersReduced)}
-                    initial="hidden"
-                    animate={inView ? 'visible' : 'hidden'}
-                >
-                    <motion.p
-                        variants={getVariant(staggerItem, prefersReduced)}
-                        className="eyebrow"
-                        style={{ marginBottom: 'var(--space-4)' }}
-                    >
-                        About Me
-                    </motion.p>
+              I build systems <br />
+              <GradientText colors={['#6366F1','#06B6D4','#10B981']} animationSpeed={4}>
+                that scale.
+              </GradientText>
+            </h2>
 
-                    <div style={{ marginBottom: 'var(--space-6)' }}>
-                        {lines.map((line, i) => (
-                            <div key={i} style={{ overflow: 'hidden' }}>
-                                <motion.h2
-                                    variants={getVariant(staggerItem, prefersReduced)}
-                                    style={{
-                                        fontFamily: 'var(--font-display)',
-                                        fontSize: 'var(--text-3xl)',
-                                        fontWeight: 'var(--weight-black)',
-                                        letterSpacing: 'var(--tracking-tight)',
-                                        lineHeight: 'var(--leading-snug)',
-                                        color: i === 2 ? undefined : 'var(--color-text-high)',
-                                        ...(i === 2 ? {
-                                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            backgroundClip: 'text',
-                                        } : {}),
-                                    }}
-                                >
-                                    {line}
-                                </motion.h2>
-                            </div>
-                        ))}
-                    </div>
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-base)',
+              color: 'var(--color-text-mid)',
+              lineHeight: 'var(--leading-relaxed)',
+              marginBottom: 'var(--space-4)',
+            }}>
+              I'm a Java Backend Engineer passionate
+              about building production-grade distributed systems. I focus on
+              clean architecture, performance optimization, and developer
+              experience.
+            </p>
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 'var(--text-base)',
+              color: 'var(--color-text-mid)',
+              lineHeight: 'var(--leading-relaxed)',
+            }}>
+              My toolkit includes Spring Boot, Docker, Kubernetes, PostgreSQL,
+              and cloud-native patterns. I believe great software is invisible —
+              it works so well that nobody thinks about it.
+            </p>
+          </div>
+        </ScrollFloat>
 
-                    <motion.p
-                        variants={getVariant(staggerItem, prefersReduced)}
-                        style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize: 'var(--text-base)',
-                            color: 'var(--color-text-mid)',
-                            lineHeight: 'var(--leading-loose)',
-                            marginBottom: 'var(--space-6)',
-                        }}
-                    >
-                        With 2+ years of hands-on experience building backend systems, I specialize in
-                        Spring Boot microservices, RESTful APIs, and JWT-based authentication. I thrive
-                        in environments where performance and reliability matter.
-                    </motion.p>
-
-                    <motion.p
-                        variants={getVariant(staggerItem, prefersReduced)}
-                        style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize: 'var(--text-base)',
-                            color: 'var(--color-text-mid)',
-                            lineHeight: 'var(--leading-loose)',
-                        }}
-                    >
-                        When I'm not designing APIs, I'm exploring the system design space, contributing
-                        to open source, or learning something new about distributed systems.
-                    </motion.p>
-                </motion.div>
-
-                {/* Right — image + stat cards */}
-                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-6)' }}>
-                    {/* Profile image placeholder with glow */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.7, delay: 0.3 }}
-                        style={{
-                            width: '220px',
-                            height: '220px',
-                            borderRadius: '50%',
-                            border: '2px solid var(--color-primary)',
-                            boxShadow: 'var(--shadow-glow-primary), 0 0 80px rgba(99,102,241,0.2)',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                            background: 'var(--color-bg-elevated)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            position: 'relative',
-                        }}
-                    >
-                        {/* Avatar initials fallback */}
-                        <span style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 'var(--text-3xl)',
-                            fontWeight: 'var(--weight-black)',
-                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text',
-                        }}>
-                            MP
-                        </span>
-                    </motion.div>
-
-                    {/* Stat cards */}
-                    <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <StatCard value="2+" label="Years Exp." delay={0.5} prefersReduced={prefersReduced} />
-                        <StatCard value="10+" label="Projects" delay={0.65} prefersReduced={prefersReduced} />
-                        <StatCard value="4" label="SaaS APIs" delay={0.8} prefersReduced={prefersReduced} />
-                    </div>
-                </div>
+        {/* RIGHT — Monogram + Stats */}
+        <ScrollFloat direction="right" offset={40}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+            {/* Monogram card */}
+            <div className="glass" style={{
+              aspectRatio: '1',
+              maxWidth: '240px',
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid var(--color-border)',
+              margin: '0 auto',
+              width: '100%',
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(3.5rem, 8vw, 5rem)',
+                fontWeight: 'var(--weight-black)',
+                color: 'var(--color-text-high)',
+                opacity: 0.12,
+                userSelect: 'none',
+              }}>
+                MP
+              </span>
             </div>
-        </section>
-    );
+
+            {/* Stats inside glass wells */}
+            <div className="stats-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 'var(--space-3)',
+            }}>
+              {STATS.map((stat) => (
+                <div key={stat.label} className="glass-inset" style={{
+                  padding: 'var(--space-4)',
+                  borderRadius: 'var(--radius-md)',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'var(--text-xl)',
+                    fontWeight: 'var(--weight-black)',
+                    color: 'var(--color-text-high)',
+                    marginBottom: '2px',
+                  }}>
+                    <CountUp end={stat.end} suffix={stat.suffix} />
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '10px',
+                    color: 'var(--color-text-low)',
+                    letterSpacing: '0.04em',
+                  }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </ScrollFloat>
+      </div>
+
+      {/* Marquee strip */}
+      <MarqueeStrip />
+
+      {/* Mobile responsive */}
+      <style>{`
+        @media (max-width: 767px) {
+          .about-split {
+            grid-template-columns: 1fr !important;
+            gap: var(--space-5) !important;
+          }
+          .stats-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+      `}</style>
+    </section>
+  );
 }

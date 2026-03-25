@@ -1,61 +1,76 @@
-import React, { Suspense, lazy, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import Loader from './components/layout/Loader.jsx';
+import React, { useState, lazy, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/layout/Navbar.jsx';
-import CustomCursor from './components/layout/CustomCursor.jsx';
-import { useLenis } from './hooks/useLenis.js';
 import Hero from './components/sections/Hero.jsx';
+import { useLenis } from './hooks/useLenis.js';
 
-// Lazy load sections below the fold
-const About = lazy(() => import('./components/sections/About.jsx'));
-const Skills = lazy(() => import('./components/sections/Skills.jsx'));
+// Lazy-loaded below-the-fold sections
+const About    = lazy(() => import('./components/sections/About.jsx'));
+const Skills   = lazy(() => import('./components/sections/Skills.jsx'));
 const Projects = lazy(() => import('./components/sections/Projects.jsx'));
 const Timeline = lazy(() => import('./components/sections/Timeline.jsx'));
-const Contact = lazy(() => import('./components/sections/Contact.jsx'));
+const Contact  = lazy(() => import('./components/sections/Contact.jsx'));
 
-const SectionFallback = () => (
-  <div className="flex items-center justify-center py-32" style={{ color: 'var(--color-text-low)' }}>
-    <div className="w-8 h-8 border-2 rounded-full animate-spin"
-      style={{ borderColor: 'var(--color-primary)', borderTopColor: 'transparent' }} />
-  </div>
-);
+function SectionFallback() {
+  return (
+    <div style={{
+      minHeight: '40vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        width: '32px',
+        height: '32px',
+        border: '2px solid var(--color-border)',
+        borderTopColor: 'var(--color-primary)',
+        borderRadius: 'var(--radius-full)',
+        animation: 'conic-spin 0.8s linear infinite',
+      }} />
+    </div>
+  );
+}
 
 export default function App() {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   useLenis();
+
+  // Page reveal: dark overlay fades out after 0.4s
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLoaded(true), 400);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>
-      <CustomCursor />
-      <AnimatePresence mode="wait">
-        {!isLoaded && (
-          <Loader key="loader" onComplete={() => setIsLoaded(true)} />
+      {/* Page reveal overlay */}
+      <AnimatePresence>
+        {!loaded && (
+          <motion.div
+            key="reveal-overlay"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              background: 'var(--color-bg-base)',
+            }}
+          />
         )}
       </AnimatePresence>
 
-      {isLoaded && (
-        <>
-          <Navbar />
-          <main>
-            <Hero />
-            <Suspense fallback={<SectionFallback />}>
-              <About />
-            </Suspense>
-            <Suspense fallback={<SectionFallback />}>
-              <Skills />
-            </Suspense>
-            <Suspense fallback={<SectionFallback />}>
-              <Projects />
-            </Suspense>
-            <Suspense fallback={<SectionFallback />}>
-              <Timeline />
-            </Suspense>
-            <Suspense fallback={<SectionFallback />}>
-              <Contact />
-            </Suspense>
-          </main>
-        </>
-      )}
+      <Navbar />
+
+      <main>
+        <Hero />
+        <Suspense fallback={<SectionFallback />}><About /></Suspense>
+        <Suspense fallback={<SectionFallback />}><Skills /></Suspense>
+        <Suspense fallback={<SectionFallback />}><Projects /></Suspense>
+        <Suspense fallback={<SectionFallback />}><Timeline /></Suspense>
+        <Suspense fallback={<SectionFallback />}><Contact /></Suspense>
+      </main>
     </>
   );
 }

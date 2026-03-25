@@ -1,211 +1,218 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Mail, Linkedin, Github, ArrowUpRight } from 'lucide-react';
-import { SOCIAL_LINKS } from '../../utils/constants.js';
-import { useReducedMotion } from '../../hooks/useReducedMotion.js';
+import { Mail, Linkedin, Github, ExternalLink, Copy, Check } from 'lucide-react';
+import SplitText from '../ui/SplitText.jsx';
+import MagneticButton from '../ui/MagneticButton.jsx';
+import Footer from '../layout/Footer.jsx';
 
-function ContactLink({ icon: Icon, label, href, color }) {
-    return (
-        <motion.a
-            href={href}
-            target={href.startsWith('http') ? '_blank' : undefined}
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.04, y: -4, boxShadow: `0 0 60px ${color}40` }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-4)',
-                padding: 'var(--space-5) var(--space-7)',
-                background: 'var(--color-bg-elevated)',
-                border: `1px solid ${color}40`,
-                borderRadius: 'var(--radius-lg)',
-                textDecoration: 'none',
-                color: 'var(--color-text-high)',
-                transition: 'border-color var(--transition-normal)',
-                width: '100%',
-                maxWidth: '480px',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = `${color}40`; }}
-        >
-            <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: 'var(--radius-md)',
-                background: `${color}20`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-            }}>
-                <Icon size={22} color={color} />
-            </div>
-            <div style={{ flex: 1 }}>
-                <div style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 'var(--text-xs)',
-                    color: 'var(--color-text-low)',
-                    letterSpacing: 'var(--tracking-widest)',
-                    textTransform: 'uppercase',
-                    marginBottom: 'var(--space-1)',
-                }}>
-                    {label}
-                </div>
-                <div style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 'var(--weight-semibold)',
-                    color: 'var(--color-text-high)',
-                }}>
-                    {href.replace('mailto:', '').replace('https://', '')}
-                </div>
-            </div>
-            <ArrowUpRight size={18} color="var(--color-text-low)" />
-        </motion.a>
-    );
+const CONTACTS = [
+  {
+    label: 'manojpandi680@gmail.com',
+    href: 'mailto:manojpandi680@gmail.com',
+    Icon: Mail,
+    copyable: true,
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://linkedin.com/in/manoj-pandi',
+    Icon: Linkedin,
+    external: true,
+  },
+  {
+    label: 'GitHub',
+    href: 'https://github.com/ManojPandi26',
+    Icon: Github,
+    external: true,
+  },
+];
+
+function ContactButton({ contact }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleClick = async (e) => {
+    if (contact.copyable) {
+      e.preventDefault();
+      await navigator.clipboard.writeText(contact.label);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <MagneticButton strength={0.12}>
+      <motion.a
+        href={contact.href}
+        target={contact.external ? '_blank' : undefined}
+        rel={contact.external ? 'noopener noreferrer' : undefined}
+        onClick={handleClick}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="glass"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-4)',
+          padding: 'var(--space-5) var(--space-6)',
+          borderRadius: 'var(--radius-lg)',
+          textDecoration: 'none',
+          color: 'var(--color-text-high)',
+          width: '100%',
+          maxWidth: '420px',
+          transition: 'border-color var(--transition-normal), box-shadow var(--transition-normal)',
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-primary-dim)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-glow-primary)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-border)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+        }}
+      >
+        <contact.Icon size={20} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+        <span style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 'var(--weight-medium)',
+          flex: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          {contact.label}
+        </span>
+        {contact.copyable ? (
+          copied ? <Check size={16} style={{ color: 'var(--color-accent)' }} /> : <Copy size={16} style={{ color: 'var(--color-text-low)' }} />
+        ) : (
+          <ExternalLink size={16} style={{ color: 'var(--color-text-low)' }} />
+        )}
+
+        {/* Shimmer sweep on hover */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)',
+          transform: 'translateX(-100%)',
+          transition: 'none',
+          pointerEvents: 'none',
+        }}
+          className="shimmer-layer"
+        />
+      </motion.a>
+    </MagneticButton>
+  );
 }
 
 export default function Contact() {
-    const prefersReduced = useReducedMotion();
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: true, margin: '-80px' });
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-60px' });
 
-    return (
-        <section
-            id="contact"
-            style={{
-                padding: 'var(--section-py) var(--section-px)',
-                background: 'var(--color-bg-base)',
-                position: 'relative',
-                overflow: 'hidden',
-            }}
+  return (
+    <>
+      <section
+        id="contact"
+        ref={ref}
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 'var(--section-py) var(--section-px)',
+          background: 'var(--color-bg-base)',
+          position: 'relative',
+          textAlign: 'center',
+        }}
+      >
+        {/* Eyebrow */}
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.4 }}
+          className="eyebrow"
+          style={{ marginBottom: 'var(--space-5)' }}
         >
-            {/* Background glow */}
-            <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '600px',
-                height: '600px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%)',
-                pointerEvents: 'none',
-                zIndex: 0,
-            }} />
+          GET IN TOUCH
+        </motion.p>
 
-            <div
-                ref={ref}
-                style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 1, textAlign: 'center' }}
+        {/* Headline */}
+        <div style={{ marginBottom: 'var(--space-3)' }}>
+          <SplitText
+            text="Let's Build Something"
+            mode="word"
+            delay={0.1}
+            stagger={0.06}
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 'var(--weight-semibold)',
+              color: 'var(--color-text-high)',
+              lineHeight: 'var(--leading-snug)',
+              justifyContent: 'center',
+            }}
+          />
+        </div>
+        <div style={{ marginBottom: 'var(--space-6)' }}>
+          <SplitText
+            text="Great Together."
+            mode="word"
+            delay={0.4}
+            stagger={0.06}
+            className="gradient-text"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 'var(--weight-black)',
+              lineHeight: 'var(--leading-snug)',
+              justifyContent: 'center',
+            }}
+          />
+        </div>
+
+        {/* Subtext */}
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 'var(--text-lg)',
+            color: 'var(--color-text-mid)',
+            lineHeight: 'var(--leading-normal)',
+            maxWidth: '580px',
+            marginBottom: 'var(--space-8)',
+          }}
+        >
+          I'm currently open to backend engineering roles, SaaS collaborations, and technical freelance projects. Let's talk.
+        </motion.p>
+
+        {/* Contact buttons */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--space-4)',
+          width: '100%',
+        }}>
+          {CONTACTS.map((contact, i) => (
+            <motion.div
+              key={contact.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.8 + i * 0.1 }}
+              style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
             >
-                {/* Eyebrow */}
-                <motion.p
-                    className="eyebrow"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    style={{ marginBottom: 'var(--space-4)' }}
-                >
-                    Get In Touch
-                </motion.p>
+              <ContactButton contact={contact} />
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-                {/* Large heading */}
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: 0.1, duration: 0.7 }}
-                    style={{ marginBottom: 'var(--space-5)' }}
-                >
-                    <h2 style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 'var(--text-3xl)',
-                        fontWeight: 'var(--weight-regular)',
-                        letterSpacing: 'var(--tracking-tight)',
-                        color: 'var(--color-text-high)',
-                        lineHeight: 'var(--leading-tight)',
-                    }}>
-                        Let's Build Something
-                    </h2>
-                    <h2
-                        className="gradient-text"
-                        style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 'var(--text-3xl)',
-                            fontWeight: 'var(--weight-black)',
-                            letterSpacing: 'var(--tracking-tight)',
-                            lineHeight: 'var(--leading-tight)',
-                        }}
-                    >
-                        Great Together.
-                    </h2>
-                </motion.div>
-
-                <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: 0.2 }}
-                    style={{
-                        fontFamily: 'var(--font-body)',
-                        fontSize: 'var(--text-base)',
-                        color: 'var(--color-text-mid)',
-                        lineHeight: 'var(--leading-loose)',
-                        maxWidth: '500px',
-                        margin: '0 auto var(--space-9)',
-                    }}
-                >
-                    I'm currently open to backend engineering roles and freelance contracts.
-                    Reach out and let's create something meaningful.
-                </motion.p>
-
-                {/* Contact links */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: 0.3, duration: 0.6 }}
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 'var(--space-4)',
-                        alignItems: 'center',
-                    }}
-                >
-                    <ContactLink
-                        icon={Mail}
-                        label="Email"
-                        href={`mailto:${SOCIAL_LINKS.email}`}
-                        color="var(--color-primary)"
-                    />
-                    <ContactLink
-                        icon={Linkedin}
-                        label="LinkedIn"
-                        href={SOCIAL_LINKS.linkedin}
-                        color="#0A66C2"
-                    />
-                    <ContactLink
-                        icon={Github}
-                        label="GitHub"
-                        href={SOCIAL_LINKS.github}
-                        color="var(--color-text-high)"
-                    />
-                </motion.div>
-
-                {/* Footer */}
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={inView ? { opacity: 1 } : {}}
-                    transition={{ delay: 0.6 }}
-                    style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: 'var(--text-xs)',
-                        color: 'var(--color-text-low)',
-                        letterSpacing: 'var(--tracking-wide)',
-                        marginTop: 'var(--space-11)',
-                    }}
-                >
-                    © {new Date().getFullYear()} Manoj Pandi — Built with React & Spring of passion.
-                </motion.p>
-            </div>
-        </section>
-    );
+      {/* Footer */}
+      <Footer />
+    </>
+  );
 }

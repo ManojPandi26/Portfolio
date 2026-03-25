@@ -1,258 +1,232 @@
 import React, { useRef, useEffect } from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
-import { TIMELINE_EVENTS } from '../../utils/constants.js';
-import { useReducedMotion } from '../../hooks/useReducedMotion.js';
+import { motion, useInView } from 'framer-motion';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import SectionHeader from '../ui/SectionHeader.jsx';
+import { TIMELINE } from '../../data/timeline.js';
 
-function TimelineNode({ event, index, prefersReduced }) {
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: true, margin: '-80px' });
-    const isLeft = event.side === 'left';
+gsap.registerPlugin(ScrollTrigger);
 
-    return (
-        <div
-            ref={ref}
-            style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 64px 1fr',
-                alignItems: 'start',
-                gap: 'var(--space-5)',
-                position: 'relative',
-                marginBottom: 'var(--space-8)',
-            }}
-        >
-            {/* LEFT card */}
-            <motion.div
-                initial={{ opacity: 0, x: isLeft ? -50 : 0 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                style={{ justifySelf: isLeft ? 'flex-end' : 'flex-start', maxWidth: '380px', width: '100%', gridColumn: isLeft ? 1 : 3 }}
-            >
-                {isLeft && (
-                    <div
-                        className="glass"
-                        style={{
-                            padding: 'var(--space-5) var(--space-6)',
-                            borderRadius: 'var(--radius-lg)',
-                            borderLeft: `3px solid ${event.color}`,
-                        }}
-                    >
-                        <span style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: 'var(--text-xs)',
-                            color: event.color,
-                            letterSpacing: 'var(--tracking-widest)',
-                        }}>{event.year}</span>
-                        <h3 style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 'var(--text-lg)',
-                            fontWeight: 'var(--weight-bold)',
-                            color: 'var(--color-text-high)',
-                            letterSpacing: 'var(--tracking-tight)',
-                            margin: 'var(--space-2) 0',
-                        }}>{event.title}</h3>
-                        <p style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize: 'var(--text-sm)',
-                            color: 'var(--color-text-mid)',
-                            lineHeight: 'var(--leading-normal)',
-                        }}>{event.description}</p>
-                    </div>
-                )}
-            </motion.div>
+/* ═══════════════════════════════════════════
+   Timeline Card
+   ═══════════════════════════════════════════ */
+function TimelineCard({ event, index }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
 
-            {/* Center dot */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gridColumn: 2 }}>
-                <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={inView ? { scale: 1, opacity: 1 } : {}}
-                    transition={{ duration: 0.4, delay: 0.2, type: 'spring', stiffness: 300 }}
-                    style={{
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
-                        background: event.color,
-                        boxShadow: `0 0 20px ${event.color}60`,
-                        flexShrink: 0,
-                        position: 'relative',
-                        zIndex: 2,
-                    }}
-                >
-                    {event.isCurrent && (
-                        <motion.div
-                            animate={{ scale: [1, 1.8, 1], opacity: [0.8, 0, 0.8] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            style={{
-                                position: 'absolute',
-                                inset: -4,
-                                borderRadius: '50%',
-                                border: `2px solid ${event.color}`,
-                            }}
-                        />
-                    )}
-                </motion.div>
-            </div>
-
-            {/* RIGHT card */}
-            <motion.div
-                initial={{ opacity: 0, x: !isLeft ? 50 : 0 }}
-                animate={inView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                style={{ justifySelf: !isLeft ? 'flex-start' : 'flex-end', maxWidth: '380px', width: '100%', gridColumn: isLeft ? 3 : 1 }}
-            >
-                {!isLeft && (
-                    <div
-                        className="glass"
-                        style={{
-                            padding: 'var(--space-5) var(--space-6)',
-                            borderRadius: 'var(--radius-lg)',
-                            borderLeft: `3px solid ${event.color}`,
-                        }}
-                    >
-                        <span style={{
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: 'var(--text-xs)',
-                            color: event.color,
-                            letterSpacing: 'var(--tracking-widest)',
-                        }}>{event.year}</span>
-                        <h3 style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 'var(--text-lg)',
-                            fontWeight: 'var(--weight-bold)',
-                            color: 'var(--color-text-high)',
-                            letterSpacing: 'var(--tracking-tight)',
-                            margin: 'var(--space-2) 0',
-                        }}>{event.title}</h3>
-                        <p style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize: 'var(--text-sm)',
-                            color: 'var(--color-text-mid)',
-                            lineHeight: 'var(--leading-normal)',
-                        }}>{event.description}</p>
-                    </div>
-                )}
-            </motion.div>
-        </div>
-    );
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="glass"
+      style={{
+        padding: 'var(--space-4) var(--space-5)',
+        borderRadius: 'var(--radius-lg)',
+        borderLeft: `3px solid ${event.current ? 'var(--color-accent)' : 'var(--color-primary-dim)'}`,
+        flex: 1,
+        minWidth: 0,
+      }}
+    >
+      <p style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 'var(--text-xs)',
+        color: event.current ? 'var(--color-accent)' : 'var(--color-primary)',
+        letterSpacing: 'var(--tracking-widest)',
+        marginBottom: 'var(--space-2)',
+      }}>
+        {event.year}
+      </p>
+      <h3 style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 'var(--text-lg)',
+        fontWeight: 'var(--weight-bold)',
+        color: 'var(--color-text-high)',
+        letterSpacing: 'var(--tracking-tight)',
+        lineHeight: 'var(--leading-snug)',
+        marginBottom: 'var(--space-2)',
+      }}>
+        {event.title}
+      </h3>
+      <p style={{
+        fontFamily: 'var(--font-body)',
+        fontSize: 'var(--text-sm)',
+        color: 'var(--color-text-mid)',
+        lineHeight: 'var(--leading-normal)',
+      }}>
+        {event.body}
+      </p>
+    </motion.div>
+  );
 }
 
+/* ═══════════════════════════════════════════
+   TIMELINE SECTION
+   Desktop: alternating left/right with center line
+   Mobile: single column with left line
+   ═══════════════════════════════════════════ */
 export default function Timeline() {
-    const prefersReduced = useReducedMotion();
-    const containerRef = useRef(null);
-    const svgRef = useRef(null);
-    const headerRef = useRef(null);
-    const headerInView = useInView(headerRef, { once: true });
+  const sectionRef = useRef(null);
+  const lineRef = useRef(null);
 
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ['start 0.8', 'end 0.8'],
-    });
+  useEffect(() => {
+    const line = lineRef.current;
+    const section = sectionRef.current;
+    if (!line || !section) return;
 
-    // Animate SVG line stroke-dashoffset based on scroll
-    useEffect(() => {
-        if (prefersReduced || !svgRef.current) return;
-        const line = svgRef.current.querySelector('#timeline-path');
-        if (!line) return;
-        const len = line.getTotalLength();
-        line.style.strokeDasharray = len;
-        line.style.strokeDashoffset = len;
+    const length = line.getTotalLength();
+    gsap.set(line, { strokeDasharray: length, strokeDashoffset: length });
 
-        const unsubscribe = scrollYProgress.on('change', (v) => {
-            line.style.strokeDashoffset = len * (1 - v);
-        });
-        return unsubscribe;
-    }, [scrollYProgress, prefersReduced]);
+    const ctx = gsap.context(() => {
+      gsap.to(line, {
+        strokeDashoffset: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 60%',
+          end: 'bottom 40%',
+          scrub: 1,
+        },
+      });
+    }, section);
 
-    return (
-        <section
-            id="timeline"
-            style={{
-                padding: 'var(--section-py) var(--section-px)',
-                background: 'var(--color-bg-elevated)',
-                position: 'relative',
-            }}
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <section
+      id="timeline"
+      ref={sectionRef}
+      style={{
+        padding: 'var(--section-py) var(--section-px)',
+        background: 'var(--color-bg-elevated)',
+        position: 'relative',
+      }}
+    >
+      <SectionHeader eyebrow="Journey" heading="Experience" />
+
+      <div className="tl-container" style={{
+        position: 'relative',
+        maxWidth: '900px',
+        margin: '0 auto',
+      }}>
+        {/* Center SVG line — desktop: center, mobile: left edge */}
+        <svg
+          className="tl-line-svg"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: 0,
+            transform: 'translateX(-50%)',
+            width: '2px',
+            height: '100%',
+            overflow: 'visible',
+            zIndex: 1,
+          }}
         >
-            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-                {/* Header */}
-                <div ref={headerRef} style={{ textAlign: 'center', marginBottom: 'var(--space-9)' }}>
-                    <motion.p
-                        className="eyebrow"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={headerInView ? { opacity: 1, y: 0 } : {}}
-                        style={{ marginBottom: 'var(--space-3)' }}
-                    >
-                        Journey
-                    </motion.p>
-                    <motion.h2
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={headerInView ? { opacity: 1, y: 0 } : {}}
-                        transition={{ delay: 0.1 }}
-                        style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 'var(--text-3xl)',
-                            fontWeight: 'var(--weight-black)',
-                            letterSpacing: 'var(--tracking-tight)',
-                            color: 'var(--color-text-high)',
-                        }}
-                    >
-                        My Timeline
-                    </motion.h2>
+          <line
+            ref={lineRef}
+            x1="1" y1="0" x2="1" y2="100%"
+            stroke="url(#tl-grad)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <defs>
+            <linearGradient id="tl-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-primary)" />
+              <stop offset="100%" stopColor="var(--color-accent)" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        {/* Timeline entries */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', position: 'relative', zIndex: 2 }}>
+          {TIMELINE.map((event, i) => {
+            const isLeft = i % 2 === 0;
+            return (
+              <div
+                key={event.year}
+                className="tl-row"
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 'var(--space-5)',
+                  position: 'relative',
+                }}
+              >
+                {/* Left side: card if isLeft, empty if isRight */}
+                <div className={`tl-side tl-left ${isLeft ? 'tl-has-card' : 'tl-empty'}`} style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                  {isLeft && <TimelineCard event={event} index={i} />}
                 </div>
 
-                {/* Timeline container */}
-                <div ref={containerRef} style={{ position: 'relative' }}>
-                    {/* SVG vertical line */}
-                    <svg
-                        ref={svgRef}
-                        style={{
-                            position: 'absolute',
-                            left: '50%',
-                            top: 0,
-                            transform: 'translateX(-50%)',
-                            height: '100%',
-                            width: '2px',
-                            zIndex: 0,
-                            overflow: 'visible',
-                        }}
-                        viewBox="0 0 2 1000"
-                        preserveAspectRatio="none"
-                    >
-                        <defs>
-                            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
-                                <stop offset="0%" stopColor="#6366F1" />
-                                <stop offset="100%" stopColor="#22C55E" />
-                            </linearGradient>
-                        </defs>
-                        <path
-                            id="timeline-path"
-                            d="M 1 0 L 1 1000"
-                            stroke="url(#lineGrad)"
-                            strokeWidth="2"
-                            fill="none"
-                            style={{ vectorEffect: 'non-scaling-stroke' }}
-                        />
-                    </svg>
-
-                    {/* Events */}
-                    {TIMELINE_EVENTS.map((event, i) => (
-                        <TimelineNode
-                            key={event.id}
-                            event={event}
-                            index={i}
-                            prefersReduced={prefersReduced}
-                        />
-                    ))}
+                {/* Center node */}
+                <div className="tl-node" style={{
+                  flexShrink: 0,
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'var(--color-bg-elevated)',
+                  border: `2px solid ${event.current ? 'var(--color-accent)' : 'var(--color-primary-dim)'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 3,
+                  position: 'relative',
+                  boxShadow: event.current ? 'var(--shadow-glow-accent)' : 'none',
+                }}>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)', fontSize: '9px',
+                    color: event.current ? 'var(--color-accent)' : 'var(--color-text-low)',
+                  }}>
+                    {event.year.slice(-2)}
+                  </span>
+                  {event.current && <span className="pulse-dot" style={{
+                    position: 'absolute', top: '-3px', right: '-3px',
+                    width: '6px', height: '6px',
+                  }} />}
                 </div>
-            </div>
 
-            {/* Mobile: vertical stack (override grid) */}
-            <style>{`
-        @media (max-width: 640px) {
-          #timeline [style*="grid-template-columns: 1fr 64px 1fr"] {
+                {/* Right side: card if isRight, empty if isLeft */}
+                <div className={`tl-side tl-right ${!isLeft ? 'tl-has-card' : 'tl-empty'}`} style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
+                  {!isLeft && <TimelineCard event={event} index={i} />}
+                </div>
+
+                {/* Mobile-only: always render card after node (hidden on desktop) */}
+                <div className="tl-mobile-card" style={{ display: 'none', flex: 1 }}>
+                  <TimelineCard event={event} index={i} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── MOBILE: collapse to single column with left line ── */}
+      <style>{`
+        @media (max-width: 767px) {
+          .tl-line-svg {
+            left: 16px !important;
+            transform: none !important;
+          }
+          .tl-row {
+            flex-wrap: wrap;
+            gap: var(--space-3) !important;
+          }
+          .tl-side {
+            display: none !important;
+          }
+          .tl-node {
+            width: 28px !important;
+            height: 28px !important;
+            flex-shrink: 0 !important;
+          }
+          .tl-mobile-card {
             display: flex !important;
-            flex-direction: column !important;
+            flex: 1 !important;
           }
         }
       `}</style>
-        </section>
-    );
+    </section>
+  );
 }
