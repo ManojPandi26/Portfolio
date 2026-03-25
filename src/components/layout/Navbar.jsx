@@ -79,7 +79,7 @@ export default function Navbar() {
             letterSpacing: 'var(--tracking-tight)',
           }}
         >
-          M.
+          MP
         </a>
 
         {/* Desktop nav */}
